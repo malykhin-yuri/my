@@ -10,6 +10,7 @@ CONFIG = {
     'bashrc': '.bashrc',
     'screenrc': '.screenrc',
     'inputrc': '.inputrc',
+    'vim/dir': 'dodi',
 }
 
 def main(dry_run):
@@ -20,7 +21,10 @@ def main(dry_run):
         dst_path = os.path.join(home_dir, dst)
         print('copy {} => {}'.format(src_path, dst_path))
         if not dry_run:
-            shutil.copy(src_path, dst_path)
+            if os.path.isdir(src_path):
+                shutil.copytree(src_path, dst_path)
+            else:
+                shutil.copy(src_path, dst_path)
 
 
 if __name__ == "__main__":
