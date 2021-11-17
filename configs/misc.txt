@@ -1,0 +1,3 @@
+Git:
+* remember password:
+    - git config --global credential.helper store
