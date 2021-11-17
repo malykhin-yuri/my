@@ -10,7 +10,7 @@ CONFIG = {
     'bashrc': '.bashrc',
     'screenrc': '.screenrc',
     'inputrc': '.inputrc',
-    'vim/dir': 'dodi',
+    'vim/dir': '.vim',
 }
 
 def main(dry_run):
