@@ -1,0 +1,1 @@
+sudo apt-get install screen vim texlive texlive-lang-cyrillic flashplugin-installer subversion firefox thunderbird
