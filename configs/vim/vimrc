@@ -1,0 +1,91 @@
+set nocompatible
+syntax on
+set mouse=
+set autoindent
+set smartindent
+set shiftwidth=4
+set softtabstop=4
+set expandtab
+set history=1000
+set showcmd
+set wildmode=longest,list
+set vb t_vb=
+
+set path=$PWD/**
+
+set list
+set listchars=tab:>- " ,trail:-
+
+set laststatus=2
+set statusline=
+set statusline+=%n\ %y\ %f\ 
+set statusline+=%h%m%r\ 
+set statusline+=%=%-15(%l/%L,%v\ \ %p%%%)
+
+highlight StatusLine ctermbg=8 ctermfg=16
+
+" set incsearch  # turned off
+
+filetype indent on
+
+set showmatch " show matching brackets
+  highlight MatchParen ctermbg=blue
+
+nmap @c :w<CR>:make<CR>
+nmap @r :w<CR>:!./%<CR>
+
+nmap gr :vimgrep /\<<C-R><C-W>\>/ **
+nmap gR :vimgrep /\<<C-R><C-W>\>/ **/*.pm **/*.pl<CR>
+
+" unimpared-style mappings
+nmap [q :cprevious<CR>
+nmap ]q :cnext<CR>
+
+nmap [c :cprevious<CR>
+nmap ]c :cnext<CR>
+
+nmap [b :bprevious<CR>
+nmap ]b :bnext<CR>
+
+nmap [t :tprevious<CR>
+nmap ]t :tnext<CR>
+
+let g:netrw_liststyle=3
+
+" buffers
+nnoremap gb :ls<CR>:b<Space>  
+set hidden
+
+" === filetype settings ===
+autocmd FileType python set makeprg=python\ -m\ py_compile\ %
+
+autocmd FileType perl set makeprg=perl\ -c\ %
+autocmd FileType perl set errorformat=%f:%l:%m
+
+" my latex plugin
+autocmd FileType tex set textwidth=80
+autocmd FileType tex set makeprg=pdflatex\ \-file\-line\-error\ \-interaction=nonstopmode\ %:S
+autocmd FileType tex set errorformat=%f:%l:\ %m
+autocmd FileType tex nmap @v :!evince %<.pdf &<CR>
+
+
+" === plugins ===
+execute pathogen#infect()
+
+let g:XkbSwitchEnabled = 1 
+let g:XkbSwitchIMappings = ['ru'] 
+
+" иначе тормозит при выходе в normal mode
+set ttimeoutlen=0
+
+
+"set rtp+=~/.fzf
+
+" ctrlp plugin
+let g:ctrlp_working_path_mode='a'  " otherwise will use all arcadia
+let g:ctrlp_max_files=0
+let g:ctrlp_custom_ignore='temp'
+
+
+" useful:
+":enew | r ! ya svn blame #
