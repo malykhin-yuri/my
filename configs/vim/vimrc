@@ -31,6 +31,10 @@ filetype indent on
 set showmatch " show matching brackets
   highlight MatchParen ctermbg=blue
 
+" fast save
+nmap <F2> :update<CR>
+imap <F2> <c-o>:update<CR>
+
 nmap @c :w<CR>:make<CR>
 nmap @r :w<CR>:!./%<CR>
 
@@ -89,3 +93,5 @@ let g:ctrlp_custom_ignore='temp'
 
 " useful:
 ":enew | r ! ya svn blame #
+
+set rtp+=~/.fzf
