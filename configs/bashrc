@@ -160,3 +160,5 @@ if [ -d $MYBASHRCDIR ]; then
         source $MYBASHRCDIR/$file;
     done
 fi
+
+source ~/.fzf.bash

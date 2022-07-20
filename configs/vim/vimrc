@@ -95,3 +95,8 @@ let g:ctrlp_custom_ignore='temp'
 ":enew | r ! ya svn blame #
 
 set rtp+=~/.fzf
+
+" VIM-PLUG
+call plug#begin('~/.vim/plugged')
+Plug 'junegunn/fzf.vim'
+call plug#end()
