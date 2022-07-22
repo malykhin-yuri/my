@@ -29,7 +29,7 @@ highlight StatusLine ctermbg=8 ctermfg=16
 filetype indent on
 
 set showmatch " show matching brackets
-  highlight MatchParen ctermbg=blue
+highlight MatchParen cterm=bold ctermbg=none ctermfg=blue
 
 " fast save
 nmap <F2> :update<CR>
