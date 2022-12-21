@@ -58,9 +58,6 @@ set hidden
 " === filetype settings ===
 autocmd FileType python set makeprg=python\ -m\ py_compile\ %
 
-autocmd FileType perl set makeprg=perl\ -c\ %
-autocmd FileType perl set errorformat=%f:%l:%m
-
 " my latex plugin
 autocmd FileType tex set textwidth=80
 autocmd FileType tex set makeprg=pdflatex\ \-file\-line\-error\ \-interaction=nonstopmode\ %:S

@@ -1,3 +1,11 @@
+Terminal:
+* no system theme; no transparency
+* background color: #000000
+* text color: #4F7752
+
+Ubuntu
+* tweaks
+
 Git:
 * remember password:
     - git config --global credential.helper store
