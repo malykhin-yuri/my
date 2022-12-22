@@ -1,0 +1,226 @@
+#!/usr/bin/perl -w
+use strict;
+
+use Getopt::Long;
+
+Getopt::Long::Configure('bundling');
+my $key;
+my $sep = "\t";
+my $jsep = ',';
+my ($help, $version);
+GetOptions(
+    't=s' => \$sep,
+    'j=s' => \$jsep,
+    'k=s' => \$key,
+    'help|h' => \$help,
+    'version|v' => \$version,
+);
+
+my $usage = <<USAGE
+Usage: reduce [OPTIONS] FORMAT [FILES]
+For each distinct value of key write aggregated values of input data to STDOUT.
+Input must be sorted by key.
+
+Options:
+  -k   key fields, comma-separated list (default: aggregate over whole input)
+           0 means whole line as a key
+  -t   input and output field separator (default: <TAB>)
+  -j   join output separator (default: ",")
+
+  -v, --version  version information
+  -h, --help  this help
+
+Output format specification:
+  comma-separated list of reducers the following form:
+  (1) field  (equivalent to field.first)
+  (2) field.func  (dot is optional)
+  (3) func[field]
+
+Examples:
+* Count sum of 2-nd field for every uniq value of 1-st field:
+  \$ reduce -k1 1,sum[2] < input > output
+* Analog of 'uniq -c'
+  \$ reduce -k0 1.c,1 input > output
+
+Functions:
+  first     first occurence of field (default)
+  last      last occurence of field
+  s[um]     sum of values
+  c[ount]   number of occurences
+  max, M    maximal numeric value
+  min       minimal numeric value
+  avg       mean value
+  j[oin]    comma-separated list of values
+  seen      comma-separated list of disctinct values
+  uniq      number of disctinct values
+USAGE
+;
+
+my $version_info = <<VERSION
+reduce 0.2
+written by Yuri Malykhin <jura05(at)narod(dot)ru>
+VERSION
+;
+
+if ($help) {
+    print $usage;
+    exit(0);
+}
+if ($version) {
+    print $version_info;
+    exit(0);
+}
+
+if (!@ARGV) {
+    die "Output format not specified!\n";
+}
+my $format = shift @ARGV;
+
+our %reducer = (
+    first => {
+        'init' => sub { my $d = ''; \$d; },
+        'first' => sub { my ($c, $v) = @_; $$c = $v; },
+        'next' => sub { 1; },
+        'last' => sub { my ($c) = @_; $$c; },
+    },
+    'last' => {
+        'init' => sub { my $d = ''; \$d; },
+        'first' => sub { my ($c, $v) = @_; $$c = $v; },
+        'next' => sub { my ($c, $v) = @_; $$c = $v; },
+        'last' => sub { my ($c) = @_; $$c; },
+    },
+    sum => {
+        'init' => sub { my $d = 0; \$d; },
+        'first' => sub { my ($c, $v) = @_; $$c = $v; },
+        'next' => sub { my ($c, $v) = @_; $$c += $v; },
+        'last' => sub { my ($c) = @_; $$c; },
+    },
+    count => {
+        'init' => sub { my $d = 0; \$d; },
+        'first' => sub { my ($c, $v) = @_; $$c = 1; },
+        'next' => sub { my ($c, $v) = @_; $$c++; },
+        'last' => sub { my ($c) = @_; $$c; },
+    },
+    max => {
+        'init' => sub { my $d = 0; \$d; },
+        'first' => sub { my ($c, $v) = @_; $$c = $v; },
+        'next' => sub { my ($c, $v) = @_; $$c = $v if $$c < $v; },
+        'last' => sub { my ($c) = @_; $$c; },
+    },
+    min => {
+        'init' => sub { my $d = 0; \$d; },
+        'first' => sub { my ($c, $v) = @_; $$c = $v; },
+        'next' => sub { my ($c, $v) = @_; $$c = $v if $$c > $v; },
+        'last' => sub { my ($c) = @_; $$c; },
+    },
+    avg => {
+        'init' => sub { my ($sum, $cnt) = (0, 0); [ $sum, $cnt ]; },
+        'first' => sub { my ($c, $v) = @_; $c->[0] = $v; $c->[1] = 1; },
+        'next' => sub { my ($c, $v) = @_; $c->[0] += $v; $c->[1]++; },
+        'last' => sub { my ($c) = @_; $c->[0]/$c->[1]; },
+    },
+    'join' => {
+        'init' => sub { my @d; \@d; },
+        'first' => sub { my ($c, $v) = @_; @$c = ($v); },
+        'next' => sub { my ($c, $v) = @_; push @$c, $v; },
+        'last' => sub { my ($c) = @_; join($jsep, @$c); },
+    },
+    seen => {
+        'init' => sub { my %seen; my @list; [ \%seen, \@list ]; },
+        'first' => sub { my ($c, $v) = @_; %{$c->[0]} = ($v => 1); @{$c->[1]} = ($v); },
+        'next' => sub { my ($c, $v) = @_; if (!$c->[0]{$v}) { push @{$c->[1]}, $v; $c->[0]{$v} = 1; } },
+        'last' => sub { my ($c) = @_; join($jsep, @{$c->[1]}); },
+    },
+    uniq => {
+        'init' => sub { my %d; \%d; },
+        'first' => sub { my ($c, $v) = @_; %{$c} = ($v => 1); },
+        'next' => sub { my ($c, $v) = @_; $c->{$v} = 1; },
+        'last' => sub { my ($c) = @_; scalar keys %$c; },
+    },
+);
+
+my $fullkey = 0;
+my $fldkey = 0;
+my @key_fld;
+if (!defined $key) {
+    # skip, aggregate over whole file
+} elsif ($key eq '0') {
+    $fullkey = 1;
+} elsif ($key ne '0') {
+    @key_fld = map { $_ - 1 } split /,/, $key;
+    $fldkey = 1;
+}
+
+# parse output format
+my @output_format;
+my %fullname = (
+    s => 'sum',
+    c => 'count',
+    j => 'join',
+    M => 'max',
+);
+for my $out (split /,/, $format) {
+    my ($out_fld, $type);
+    if ($out =~ /^(\d+)\.?([a-zA-Z]\w*)$/) {
+        ($out_fld, $type) = ($1 - 1, $2);
+    } elsif ($out =~ /^([a-zA-Z]\w*)\[(\d+)\]$/) {
+        ($out_fld, $type) = ($2 - 1, $1);
+    } elsif ($out =~ /^(\d+)$/) {
+        ($out_fld, $type) = ( $1 - 1, 'first');
+    } else {
+        die "Wrong output format [$format]!\n" ;
+    }
+    $type = $fullname{$type} if defined $fullname{$type};
+    die "Unknown function [$type]!\n" if !defined $reducer{$type};
+    push @output_format, [ $out_fld, $type ];
+}
+
+# init reducers
+my (@out_fld, @curr_data);
+my (@reducer_type, @reducer_first, @reducer_next, @reducer_last);
+for (@output_format) {
+    my ($out_fld, $type) = @$_;
+    push @out_fld, $out_fld;
+    my $r = $reducer{$type};
+    push @reducer_type, $type;
+    push @reducer_first, $r->{'first'};
+    push @reducer_next, $r->{'next'};
+    push @reducer_last, $r->{'last'};
+    push @curr_data, $r->{'init'}->();
+}
+my @ind = (0 .. $#out_fld);
+my @next_ind = grep { $reducer_type[$_] ne 'first' } @ind;
+
+# process first line
+my ($curr_key, @curr_key);
+my $first_line = <>;
+exit(0) if !defined $first_line;  # case of empty input
+chomp $first_line;
+my @fld = split $sep, $first_line, -1;
+my @key = @fld[@key_fld];
+my @out = @fld[@out_fld];
+@curr_key = @key;
+$curr_key = $first_line if $fullkey;
+$reducer_first[$_]->($curr_data[$_], $out[$_]) for @ind;
+
+# process input
+while (<>) {
+    chomp;
+    my @fld = split $sep, $_, -1;
+    my @key = @fld[@key_fld];
+    my @out = @fld[@out_fld];
+    if (($fullkey and $_ ne $curr_key)
+            or
+        ($fldkey and grep { $key[$_] ne $curr_key[$_] } 0 .. $#key_fld)
+    ) {
+        my @res = map { $reducer_last[$_]->($curr_data[$_]) } @ind;
+        print join($sep, @res), "\n";
+        $reducer_first[$_]->($curr_data[$_], $out[$_]) for @ind;
+        @curr_key = @fld[@key_fld];
+        $curr_key = $_ if $fullkey;
+    } else {
+        $reducer_next[$_]->($curr_data[$_], $out[$_]) for @next_ind;
+    }
+}
+my @res = map { $reducer_last[$_]->($curr_data[$_]) } @ind;
+print join($sep, @res), "\n";
