@@ -1,2 +1,3 @@
 sudo apt install screen vim texlive texlive-lang-cyrillic flashplugin-installer subversion firefox thunderbird
 sudo apt install fzf
+sudo apt install grip  # Preview GitHub Markdown files like Readme locally
