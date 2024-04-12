@@ -102,30 +102,13 @@ alias tsort='LC_ALL=C sort -t"	" -T.'
 alias tjoin='LC_ALL=C join -t"	"'
 alias w2u='iconv -fcp1251 -tutf8'
 
-# Ya-specific
-alias ya='~/ya'
-
 # Functions
 function tex2pdf() {
     name=${1%.tex}
     latex $name.tex && latex $name.tex && dvips $name.dvi && ps2pdf $name.ps;
 }
-function grepsrc() {
-    find . -name '*.pl' -o -name '*.pm' -o -name '*.tmpl' | xargs grep -H -n "$1" ;
-}
 function fullpath() {
     echo `/etc/hostname`:`readlink -m $1`;
-}
-function bmssh() {
-    if [[ $1 == "bmdev" ]];
-        then screen -t dev ssh bmgen-dev01e.yandex.ru;
-    elif [[ $1 == "bmfront" ]];
-        then screen -t bmfront ssh bmfront01f.yandex.ru;
-    elif [[ $1 == "bmfront01f" ]];
-        then screen -t bmfront ssh bmfront01f.yandex.ru;
-    else
-        screen -t $1 ssh -t bmfront01f.yandex.ru ssh $1.yandex.ru;
-    fi
 }
 
 # enable programmable completion features (you don't need to enable
@@ -136,10 +119,6 @@ if [ -f /etc/bash_completion ]; then
 fi
 
 export EDITOR=vim
-export BMR=/opt/broadmatching
-
-# for WEKA
-export CLASSPATH=/usr/share/java/weka.jar
 
 # for deb packages signing
 export DEBFULLNAME="Yuri Malykhin"
