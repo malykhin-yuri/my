@@ -24,6 +24,8 @@ set statusline+=%=%-15(%l/%L,%v\ \ %p%%%)
 
 highlight StatusLine ctermbg=8 ctermfg=16
 
+set nomodeline
+
 " set incsearch  # turned off
 
 filetype indent on
