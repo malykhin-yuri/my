@@ -1,1 +1,1 @@
-sudo apt install screen vim texlive texlive-lang-cyrillic flashplugin-installer firefox fzf
+sudo apt install screen vim texlive texlive-lang-cyrillic texlive-plain-generic flashplugin-installer firefox fzf

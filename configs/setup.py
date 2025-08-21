@@ -34,6 +34,8 @@ def main(dry_run):
             else:
                 shutil.copy(src_path, dst_path)
 
+    logging.info('vim: run :PlugInstall')
+
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()

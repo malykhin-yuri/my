@@ -3,8 +3,15 @@ Terminal:
 * background color: #000000
 * text color: #4F7752
 
-Ubuntu
-* tweaks
+Ubuntu 22.04
+* gnome-tweaks
+    - fonts: ubuntu mono regular 16
+* keyboard layout:
+    - sudo vim /etc/gdm3/custom.conf
+    - Uncomment the line:
+    - #WaylandEnable=false
+    - Restart GDM3 display manager:
+    - sudo systemctl restart gdm3
 
 Git:
 * remember password:
@@ -20,3 +27,6 @@ vim-plug:
     first vim run: :PlugInstall 
 
 https://github.com/lyokha/g3kb-switch - чтобы работал xkbswitch
+
+Python build: dev packages
+    https://devguide.python.org/getting-started/setup-building/index.html#deps-on-linux
